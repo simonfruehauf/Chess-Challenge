@@ -13,10 +13,10 @@ public class MyBot : IChessBot{
     /// </summary>
     int eval(Board board){
         int mobilityValue = 4 * board.GetLegalMoves().Length + 8 * board.GetLegalMoves(true).Length, pieceValue = 0, checkValue = 0; // I feel so bad about defining variables like this
-        int[] materialvalues = { 100, 320, 330, 500, 900, board.PlyCount >= 25 ? 10000 : 20000  };  // Give the King more value in lategame
+        int[] materialvalues = { 100, 320, 330, 500, 900, board.PlyCount >= 25 ? 10000 : 20000 };  // Give the King more value in lategame
         // Material values for P, N, B, R, Q, K
         // These values avoid exchanging minor pieces (N & B) for 3 minor pieces
-        if (board.TrySkipTurn()) // skip this if in check
+        if (board.TrySkipTurn()) // Don't skip this if in check.
         {
             int skipLegalMovesCount = board.GetLegalMoves().Length, skipCaptureMovesCount = board.GetLegalMoves(true).Length;
             mobilityValue -= 4 * skipLegalMovesCount + 8 * skipCaptureMovesCount;
