@@ -74,4 +74,5 @@ public class MyBot : IChessBot{
                 board.UndoMove(move);
                 if (score >= beta) return beta;
                 if (score > alpha) alpha = score;}}
-        return alpha;}    int depth_check(Board board) => board.IsInCheck() ? 1 : 2;}
+        return alpha;}    
+        int depth_check(Board board) => board.IsInCheck() ? 1 : 2;}
