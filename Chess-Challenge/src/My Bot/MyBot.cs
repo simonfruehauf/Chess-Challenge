@@ -12,8 +12,10 @@ public class MyBot : IChessBot{
     /// Evaluates a current board based on mobility, material and other factors. Returns a score.
     /// </summary>
     int eval(Board board){
-        int mobilityValue = 4 * board.GetLegalMoves().Length + 8 * board.GetLegalMoves(true).Length, pieceValue = 0, checkValue = 0; //i feel so bad about defining variables like this
-        int[] materialvalues = { 100, 300, 300, 500, 900, 10000 };  // pawn, knight, bishop, rook, queen, king        
+        int mobilityValue = 4 * board.GetLegalMoves().Length + 8 * board.GetLegalMoves(true).Length, pieceValue = 0, checkValue = 0; // I feel so bad about defining variables like this
+        int[] materialvalues = { 100, 320, 330, 500, 900, board.PlyCount >= 25 ? 10000 : 20000  };  // Give the King more value in lategame
+        // Material values for P, N, B, R, Q, K
+        // These values avoid exchanging minor pieces (N & B) for 3 minor pieces
         if (board.TrySkipTurn()) // skip this if in check
         {
             int skipLegalMovesCount = board.GetLegalMoves().Length, skipCaptureMovesCount = board.GetLegalMoves(true).Length;
@@ -23,9 +25,9 @@ public class MyBot : IChessBot{
             else if (skipLegalMovesCount == 0) mobilityValue += 1500;
             board.UndoSkipTurn();}
         PieceList[] pieces = board.GetAllPieceLists();        
-        for (int i = 0; i < 6; i++) pieceValue += (pieces[i].Count - pieces[i + 6].Count) * materialvalues[i]; //calc value of current position        
+        for (int i = 0; i < 6; i++) pieceValue += (pieces[i].Count - pieces[i + 6].Count) * materialvalues[i]; // Calculate value of current board        
         if (board.IsInCheckmate()) checkValue -= 2147483647;
-        else if (board.IsInCheck()) checkValue -= 180;
+        else if (board.IsInCheck()) checkValue -= 170;
         else if (board.GetLegalMoves().Length == 0) checkValue += 2000;        
         int lastPositionValue = lastpositions.Contains(board.ZobristKey) ? mobilityValue / 2 : 0;        
         return (mobilityValue + pieceValue + checkValue + lastPositionValue) * (board.IsWhiteToMove ? 1 : -1);}    
@@ -35,9 +37,9 @@ public class MyBot : IChessBot{
     /// </summary>
     Move pick_move(Board board, int depth){
         int alpha = -2147483647;
-        Move[] moves = board.GetLegalMoves(), capturemoves = board.GetLegalMoves(true);        
+        Move[] moves = board.GetLegalMoves();        
         Move bestMove = moves.Length > 0 ? moves[0] : new Move();
-        foreach (Move move in (capturemoves.Length >= 0 ? moves : capturemoves)){
+        foreach (Move move in moves ){
             board.MakeMove(move);
             int value = -alpha_beta(-int.MaxValue, -alpha, depth - depth_check(board), board);
             board.UndoMove(move);
