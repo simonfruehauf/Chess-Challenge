@@ -21,7 +21,7 @@ public class MyBot : IChessBot{
             int skipLegalMovesCount = board.GetLegalMoves().Length, skipCaptureMovesCount = board.GetLegalMoves(true).Length;
             mobilityValue -= 4 * skipLegalMovesCount + 8 * skipCaptureMovesCount;
             if (board.IsInCheckmate()) mobilityValue += 2147483647;
-            else if (board.IsInCheck()) mobilityValue += 180;
+            else if (board.IsInCheck()) mobilityValue += 170;
             else if (skipLegalMovesCount == 0) mobilityValue += 1500;
             board.UndoSkipTurn();}
         PieceList[] pieces = board.GetAllPieceLists();        
