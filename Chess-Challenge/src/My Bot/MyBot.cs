@@ -6,7 +6,7 @@ public class MyBot : IChessBot
     Queue<ulong> lastpositions = new();
     public Move Think(Board board, Timer timer)
     {
-        Move move = pick_move(board, timer.MillisecondsRemaining >= 40000 ? 7 : timer.MillisecondsRemaining >= 20000 ? 5 : 6);
+        Move move = PickMove(board, timer.MillisecondsRemaining >= 40000 ? 7 : timer.MillisecondsRemaining >= 20000 ? 5 : 6);
         board.MakeMove(move);
         lastpositions.Enqueue(board.ZobristKey);
         if (lastpositions.Count > 50) lastpositions.Dequeue();
@@ -15,7 +15,7 @@ public class MyBot : IChessBot
     /// <summary>
     /// Evaluates a current board based on mobility, material and other factors. Returns a score.
     /// </summary>
-    int eval(Board board)
+    int Eval(Board board)
     {
         int mobilityValue = 4 * board.GetLegalMoves().Length + 8 * board.GetLegalMoves(true).Length, pieceValue = 0, checkValue = 0; // I feel so bad about defining variables like this
         int[] materialvalues = { 100, 320, 330, 500, 900, board.PlyCount >= 25 ? 10000 : 20000 };  // Give the King more value in lategame
@@ -42,7 +42,7 @@ public class MyBot : IChessBot
     /// Loops through legal moves and evaluates them with the AlphaBeta function.
     /// Always returns a valid move, but not neccesarily the best.
     /// </summary>
-    Move pick_move(Board board, int depth)
+    Move PickMove(Board board, int depth)
     {
         int alpha = -2147483647;
         Move[] moves = board.GetLegalMoves();
@@ -50,7 +50,7 @@ public class MyBot : IChessBot
         foreach (Move move in moves)
         {
             board.MakeMove(move);
-            int value = -alpha_beta(-int.MaxValue, -alpha, depth - depth_check(board), board);
+            int value = -AlphaBeta(-int.MaxValue, -alpha, depth - DepthCheck(board), board);
             board.UndoMove(move);
             if (value > alpha)
             {
@@ -64,15 +64,15 @@ public class MyBot : IChessBot
     /// Recursively calls itself until it hits its maximum depth, then evaluates with the quiesce function.
     /// Also saves already evaluated values in the transpositions variable for later access.
     /// </summary>
-    int alpha_beta(int alpha, int beta, int depth, Board board)
+    int AlphaBeta(int alpha, int beta, int depth, Board board)
     {
-        if (depth <= 0) return quiesce(alpha, beta, 4, board);
+        if (depth <= 0) return Quiesce(alpha, beta, 4, board);
         foreach (Move move in board.GetLegalMoves())
         {
             board.MakeMove(move);
             if (!transpositions.TryGetValue(board.ZobristKey, out int score))
             {
-                score = -alpha_beta(-beta, -alpha, depth - depth_check(board), board);
+                score = -AlphaBeta(-beta, -alpha, depth - DepthCheck(board), board);
                 transpositions[board.ZobristKey] = score;
             }
             board.UndoMove(move);
@@ -81,9 +81,9 @@ public class MyBot : IChessBot
         }
         return alpha;
     }
-    int quiesce(int alpha, int beta, int depth, Board board)
+    int Quiesce(int alpha, int beta, int depth, Board board)
     {
-        int stand_pat = eval(board);
+        int stand_pat = Eval(board);
         if (depth <= 0) return stand_pat;
         if (stand_pat >= beta || alpha < stand_pat) alpha = stand_pat;
         foreach (Move move in board.GetLegalMoves())
@@ -93,7 +93,7 @@ public class MyBot : IChessBot
                 board.MakeMove(move);
                 if (!quiesces.TryGetValue(board.ZobristKey, out int score))
                 {
-                    score = -quiesce(-beta, -alpha, depth - depth_check(board), board);
+                    score = -Quiesce(-beta, -alpha, depth - DepthCheck(board), board);
                     quiesces[board.ZobristKey] = score;
                 }
                 board.UndoMove(move);
@@ -103,5 +103,5 @@ public class MyBot : IChessBot
         }
         return alpha;
     }
-    int depth_check(Board board) => board.IsInCheck() ? 1 : 2;
+    int DepthCheck(Board board) => board.IsInCheck() ? 1 : 2;
 }
