@@ -39,12 +39,13 @@ public class MyBot : IChessBot
             // Calculate material value of current board        
             pieceValue += (pieces[i].Count - pieces[i + 6].Count) * materialValues[i];
             // calculate positional value of pieces
-            for (int x = 0; x < 1; x++)
+            bool x = false;
+            do
             {
                 double posValue = 0;
-                foreach (Piece p in board.GetPieceList((PieceType)(i+1), x == 1)) // x == 0 is black
+                foreach (Piece p in board.GetPieceList((PieceType)(i+1), x)) // x == 0 is black
                 {
-                    int row = CalcPosition(p.Square.Index, x == 1).Item1, col = CalcPosition(p.Square.Index, x == 1).Item2;
+                    var (row,col) = CalcPosition(p.Square.Index,x);
                     switch ((PieceType)(i+1)){
                         case PieceType.Knight:
                             posValue = roundToNearest((MathF.Abs(row - 4.5f) + MathF.Abs(col - 4.5f)) / 2 * 23, 5)-30;
@@ -69,8 +70,8 @@ public class MyBot : IChessBot
                     pieceValue += (int)(posValue*1);
 
                 }
-            }
-            //posValue*= -1;
+                x = !x;
+            } while (x);
 
         }
 
